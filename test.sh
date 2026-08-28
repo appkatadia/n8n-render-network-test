@@ -1,40 +1,38 @@
-#!/bin/sh
-
-HOST="aws-1-ap-southeast-1.pooler.supabase.com"
-PORT="5432"
-USER="postgres.okbnccxznsjmmpfrzxlh"
-DATABASE="postgres"
-
-echo "======================================"
-echo " Render → Supabase PostgreSQL test"
-echo "======================================"
-
 echo ""
-echo "[1] DNS lookup"
-getent hosts "$HOST"
+echo "[5] Node.js pg test"
 
-echo ""
-echo "[2] TCP connectivity"
-nc -vz -w 10 "$HOST" "$PORT"
+node <<'NODE'
+const { Client } = require('pg');
 
-echo ""
-echo "[3] PostgreSQL readiness"
-pg_isready \
-  -h "$HOST" \
-  -p "$PORT" \
-  -U "$USER" \
-  -d "$DATABASE"
+const client = new Client({
+  host: 'aws-1-ap-southeast-1.pooler.supabase.com',
+  port: 5432,
+  database: 'postgres',
+  user: 'postgres.okbnccxznsjmmpfrzxlh',
+  password: process.env.PGPASSWORD,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  connectionTimeoutMillis: 10000
+});
 
-echo ""
-echo "[4] PostgreSQL authentication"
+(async () => {
+  try {
+    await client.connect();
 
-psql \
-  "host=$HOST port=$PORT dbname=$DATABASE user=$USER sslmode=require" \
-  -c "SELECT current_database(), current_user, version();"
+    const result = await client.query(
+      'SELECT current_database(), current_user, version()'
+    );
 
-echo ""
-echo "======================================"
-echo "Test finished"
-echo "======================================"
+    console.log(result.rows);
 
-node -e "require('http').createServer((req,res)=>res.end('network-test')).listen(3000,'0.0.0.0')"
+    await client.end();
+
+    console.log('NODE PG CONNECTION: SUCCESS');
+  } catch (err) {
+    console.error('NODE PG CONNECTION: FAILED');
+    console.error(err);
+    process.exit(1);
+  }
+})();
+NODE

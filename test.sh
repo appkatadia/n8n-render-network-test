@@ -1,8 +1,8 @@
 #!/bin/sh
 
-HOST="aws-1-ap-southeast-1.pooler.supabase.com"
+HOST="db.okbnccxznsjmmpfrzxlh.supabase.co"
 PORT="5432"
-USER="postgres.okbnccxznsjmmpfrzxlh"
+USER="postgres"
 DATABASE="postgres"
 
 echo "======================================"
@@ -39,10 +39,10 @@ node <<'NODE'
 const { Client } = require('pg');
 
 const client = new Client({
-  host: 'aws-1-ap-southeast-1.pooler.supabase.com',
+  host: 'db.okbnccxznsjmmpfrzxlh.supabase.co',
   port: 5432,
   database: 'postgres',
-  user: 'postgres.okbnccxznsjmmpfrzxlh',
+  user: 'postgres',
   password: process.env.PGPASSWORD,
   ssl: {
     rejectUnauthorized: false
